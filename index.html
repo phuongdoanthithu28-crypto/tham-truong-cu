@@ -4,25 +4,41 @@
 <title>Trường THPT Nguyễn Bỉnh Khiêm 3D</title>
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:#9fd3f5;font-family:Arial,sans-serif;touch-action:none}
-#hud{position:fixed;top:8px;left:10px;right:10px;color:#fff;text-shadow:0 1px 3px #000;font-size:14px;pointer-events:none}
+#hud{position:fixed;top:8px;left:10px;right:10px;color:#fff;text-shadow:0 1px 3px #000;font-size:14px;pointer-events:none;z-index:5}
 #online{color:#7bed9f;font-weight:bold;margin-top:2px}
-#joy{position:fixed;left:24px;bottom:24px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.6);touch-action:none}
+#joy{position:fixed;left:24px;bottom:24px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.6);touch-action:none;z-index:5}
 #knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.85)}
-#act{position:fixed;right:18px;bottom:36px;display:none;flex-direction:column;gap:10px}#act button{font-size:18px;padding:14px 18px;border:0;border-radius:12px;background:#1f7a3a;color:#fff;font-weight:bold;box-shadow:0 2px 6px #0006}
-#outfit,#hairb,#nameb{position:fixed;right:12px;font-size:15px;padding:10px 14px;border:0;border-radius:12px;background:#7a3b8a;color:#fff;font-weight:bold;box-shadow:0 2px 6px #0006}#hairb{top:88px;background:#2a7a8a}#nameb{top:132px;background:#8a6a2a}
-#outfit{top:44px;font-size:15px;padding:10px 14px;border:0;border-radius:12px;background:#7a3b8a;color:#fff;font-weight:bold;box-shadow:0 2px 6px #0006}
+#act{position:fixed;right:18px;bottom:36px;display:none;flex-direction:column;gap:10px;z-index:5}#act button{font-size:18px;padding:14px 18px;border:0;border-radius:12px;background:#1f7a3a;color:#fff;font-weight:bold;box-shadow:0 2px 6px #0006;cursor:pointer}
+#outfit,#hairb,#nameb,#bgm{position:fixed;right:12px;font-size:15px;padding:10px 14px;border:0;border-radius:12px;color:#fff;font-weight:bold;box-shadow:0 2px 6px #0006;cursor:pointer;z-index:5}
+#outfit{top:44px;background:#7a3b8a}#hairb{top:88px;background:#2a7a8a}#nameb{top:132px;background:#8a6a2a}#bgm{top:176px;background:#2e6b3e}
+#gbModal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:20;touch-action:auto}
+.gbBox{background:#fffdf7;width:90%;max-width:440px;border-radius:14px;padding:18px;box-shadow:0 10px 30px #0008;border:3px solid #1c3f94;display:flex;flex-direction:column;max-height:82vh}
+.gbHead{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #eee;padding-bottom:8px;margin-bottom:10px}
+.gbHead h3{margin:0;color:#1c3f94;font-size:18px}
+.gbClose{background:#d8201f;color:#fff;border:0;border-radius:8px;padding:5px 11px;font-weight:bold;cursor:pointer}
+#gbList{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding-right:4px}
+.gbItem{background:#f2f5fa;padding:9px 12px;border-radius:9px;border-left:4px solid #1c3f94;font-size:13.5px;color:#222}
+.gbItem b{color:#1c3f94;display:block;margin-bottom:2px}
+.gbForm{display:flex;gap:8px}
+.gbForm input{flex:1;padding:10px;border:2px solid #ccc;border-radius:9px;font-size:14px}
+.gbForm button{background:#1f7a3a;color:#fff;border:0;border-radius:9px;padding:0 16px;font-weight:bold;cursor:pointer}
 </style></head><body>
 <div id="hud"><b>Trường THPT Nguyễn Bỉnh Khiêm</b><div id="online">🟢 Đang trong trường: 1 học sinh</div><span id="subhud">Phím mũi tên / WASD hoặc cần gạt (điện thoại) để di chuyển</span></div>
-<button id="outfit"></button><button id="hairb"></button><button id="nameb">✏️ Đổi tên</button>
+<button id="outfit"></button><button id="hairb"></button><button id="nameb">✏️ Đổi tên</button><button id="bgm">🔇 Nhạc nền: Tắt</button>
 <div id="act"><button id="a1"></button><button id="a2"></button></div>
 <div id="joy"><div id="knob"></div></div>
+
+<div id="gbModal"><div class="gbBox">
+  <div class="gbHead"><h3>📖 Sổ Lưu Bút Kỷ Niệm</h3><button class="gbClose" id="gbClose">Đóng</button></div>
+  <div id="gbList"><div style="color:#666;font-size:13px">Đang tải lời nhắn...</div></div>
+  <div class="gbForm"><input id="gbInput" placeholder="Viết lời nhắn lưu giữ thanh xuân..." maxlength="160"><button id="gbSend">Gửi</button></div>
+</div></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ================= DÁN 2 MÃ SUPABASE CỦA BẠN VÀO ĐÂY =================
 const SUPABASE_URL = 'https://kejuzmwpfnayylgqfppd.supabase.co';
-const SUPABASE_ANON_KEY = 'kejuzmwpfnayylgqfppd';
-// =====================================================================
+const SUPABASE_ANON_KEY = 'sb_publishable_nE1jbmeMi7kR4cOdO5sqog_qiW8d7ar';
 
 const T=THREE,scene=new T.Scene();
 scene.background=new T.Color(0x9fd3f5);scene.fog=new T.Fog(0x9fd3f5,100,280);
@@ -47,16 +63,16 @@ const hit=(x,z)=>C.some(c=>x>c[0]-.4&&x<c[1]+.4&&z>c[2]-.4&&z<c[3]+.4);
 
 /* ---------- mặt đất, đường, kênh ---------- */
 const g0=box(700,.02,700,0x78c24a,0,-.01,0);g0.userData.flat=1;
-flat(126,52,0xbdb8ae,-23,.02,0);                 // sân chính
-flat(400,3.8,0xcfc9bd,0,.02,28.1);            // vỉa hè
-flat(400,10,0x4a4d52,0,.02,35);               // đường
+flat(126,52,0xbdb8ae,-23,.02,0);
+flat(400,3.8,0xcfc9bd,0,.02,28.1);
+flat(400,10,0x4a4d52,0,.02,35);
 flat(400,.15,0xf2c200,0,.04,34.8);flat(400,.15,0xf2c200,0,.04,35.3);
-flat(400,10,0x9a7b45,0,.02,46);               // kênh
+flat(400,10,0x9a7b45,0,.02,46);
 flat(400,.6,0xb8b4aa,0,.1,40.6);
-flat(36,22,0xb7b3aa,-22,.03,-60);             // sân bê tông thể thao (trái)
-flat(36,22,0x8ed36a,22,.03,-60);              // sân cỏ tự nhiên (phải)
-flat(30,12,0xaaa59c,-66,.04,19);              // sân phụ
-flat(15.4,11.4,0xa7a39a,-16,.04,3);               // nền khu tượng
+flat(36,22,0xb7b3aa,-22,.03,-60);
+flat(36,22,0x8ed36a,22,.03,-60);
+flat(30,12,0xaaa59c,-66,.04,19);
+flat(15.4,11.4,0xa7a39a,-16,.04,3);
 for(let i=0;i<4;i++)flat(400,30,i%2?0x86d34a:0x6dbb3f,0,.01,-120-i*30);
 
 /* ---------- cây ---------- */
@@ -117,8 +133,6 @@ const flagTx=tex(256,170,(c,w,h)=>{c.fillStyle='#da251d';c.fillRect(0,0,w,h);c.f
 const flagP=new T.Group();flagP.position.set(7.1,10.8,-12);scene.add(flagP);sign(flagTx,3,2,1.5,0,0,flagP,true);
 
 /* ---------- cổng chính + cổng phụ + tường rào ---------- */
-const gateTx=tex(1024,80,(c,w,h)=>{c.fillStyle='#fff';c.fillRect(0,0,w,h);c.fillStyle='#1c3f94';c.font='bold 40px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('TRƯỜNG THPT NGUYỄN BỈNH KHIÊM',w/2,h/2)});
-/* cổng chính: 2 lối vào, trụ giữa cao có vòm + huy hiệu, dầm trên có chậu cây */
 const WH=0xf1efe8,DK=0x4a4f55;
 const gateTx2=tex(1024,128,(c,w,h)=>{c.fillStyle='#f6f4ee';c.fillRect(0,0,w,h);c.fillStyle='#1c3f94';c.textAlign='center';c.textBaseline='middle';
  c.font='bold 18px Arial';c.fillText('ỦY BAN NHÂN DÂN THÀNH PHỐ HẢI PHÒNG – SỞ GIÁO DỤC VÀ ĐÀO TẠO',w/2,20,w-30);
@@ -138,7 +152,6 @@ box(13.2,.3,.8,0x7a3a2e,7.9,5.75,26);[2.5,4,5.5,11,12.5,14].forEach(x=>ball(.3,0
 sign(gateTx2,6.4,.8,4.7,5.2,26.52);box(5,.35,.2,0x3a3f45,5.5,4.55,26);
 box(.1,2.2,2.6,0x1f6b3a,3.1,1.1,24.7);box(.1,2.2,2.6,0x1f6b3a,7.9,1.1,24.7);box(.1,2.2,1.4,0x1f6b3a,12.4,1.1,25.3);
 sign(bigTx,2.4,1,-1.3,1.4,26.21);sign(blTx,.7,.7,.9,1.35,26.21);sign(blTx,1.2,1.2,16.2,1.4,26.21);
-/* vỉa hè lát gạch, lối lên cổng, cây vỉa hè, cột sơn đỏ trắng */
 const pvT=tex(128,128,(c,w,h)=>{c.fillStyle='#c9c4b8';c.fillRect(0,0,w,h);c.strokeStyle='#8e897e';c.lineWidth=3;
  for(let r=0;r<4;r++){c.strokeRect(0,r*32,w,32);c.beginPath();for(let k=0;k<2;k++){const x=(k*64+(r%2)*32)%128;c.moveTo(x,r*32);c.lineTo(x,r*32+32)}c.stroke()}});
 pvT.wrapS=pvT.wrapT=T.RepeatWrapping;pvT.repeat.set(200,1.9);
@@ -156,7 +169,7 @@ function wall(x1,x2){const cx=(x1+x2)/2,L=x2-x1;
 wall(-86,-67);wall(-61,2);wall(13.5,40);
 for(const sx of[-86,40]){box(.4,2.2,63,0xf2d98a,sx,1.1,-5.5);col(sx-.2,sx+.2,-37,26)}
 
-/* ---------- khu tượng cụ Nguyễn Bỉnh Khiêm ---------- */
+/* ---------- khu tượng cụ Nguyễn Bỉnh Khiêm & Bảng Lưu Bút ---------- */
 box(5,3.4,.8,0x8b8f94,-16,1.7,1.4);cyl(2.5,2.5,.8,0x8b8f94,-16,3.4,1.4,null,24).rotation.x=Math.PI/2;
 box(2,1.3,1.5,0x9a9ea3,-16,.65,2.6);box(1,1.1,.7,0x2a2a2a,-16,1.85,2.6);ball(.25,0x2a2a2a,-16,2.65,2.65);
 box(2.2,.9,1,0x8b8f94,-16,.45,4.6);box(.4,.3,.4,0xcc2222,-16,1.05,4.6);
@@ -164,20 +177,28 @@ box(2.2,.9,1,0x8b8f94,-16,.45,4.6);box(.4,.3,.4,0xcc2222,-16,1.05,4.6);
 box(1.4,.7,1.4,0xa0402e,-10.5,.35,6);cyl(.12,.15,1.6,0x4a3320,-10.5,1.5,6);ball(1.2,0x2f7f35,-10.5,2.7,6).scale.y=.45;
 box(6.5,3,.5,0x9a9ea3,-11.5,1.5,-1.2);
 col(-19,-13,.5,5.5);
-/* bờ bó vỉa bao quanh khu tượng (thấp, bước qua được), lối ra vào hướng ra đường */
 const CB=0xc8c4ba;
 box(16,.25,.3,CB,-16,.125,-3);box(.3,.25,12,CB,-24,.125,3);box(.3,.25,12,CB,-8,.125,3);box(6,.25,.3,CB,-21,.125,9);box(6,.25,.3,CB,-11,.125,9);
 box(.5,.7,.5,0xb8b4aa,-18,.35,9);box(.5,.7,.5,0xb8b4aa,-14,.35,9);
 [[-23,-2],[-9,-2],[-23,8],[-9,8]].forEach((a,i)=>{cyl(.7,.5,.8,[0xb78a2f,0x3a7ea0,0xa0402e,0x6a8a4a][i],a[0],.4,a[1]);ball(.9,[0x2f7f35,0x3f8f3a,0x2f7f35,0x4a9a3a][i],a[0],1.5,a[1])});
 const BSEATS=[];
 [[-23.2,1.5],[-23.2,5.5],[-8.8,1.5],[-8.8,5.5]].forEach(a=>{const dr=a[0]<-16?1:-1;BSEATS.push({x:a[0],z:a[1]-.5,o:0,r:dr*Math.PI/2,h:-.32,ex:dr*.8,ez:0},{x:a[0],z:a[1]+.5,o:0,r:dr*Math.PI/2,h:-.32,ex:dr*.8,ez:0});box(.55,.1,2.2,0x9c9a94,a[0],.5,a[1]);box(.45,.5,.35,0x8a8883,a[0],.25,a[1]-.8);box(.45,.5,.35,0x8a8883,a[0],.25,a[1]+.8);col(a[0]-.3,a[0]+.3,a[1]-1.1,a[1]+1.1)});
-box(10.4,.3,1.2,0xb8b4aa,-16,.15,.4);box(10,.12,.8,0x6bd048,-16,.34,.4);col(-21.2,-10.8,-.2,1);   // bồn cỏ Nhật sau lưng tường đá
-(function(){const g=new T.Group();g.position.set(-20.6,0,9.8);g.rotation.z=-.5;g.rotation.x=-.2;scene.add(g);   // cây cổ thụ nghiêng vào sân tượng
+box(10.4,.3,1.2,0xb8b4aa,-16,.15,.4);box(10,.12,.8,0x6bd048,-16,.34,.4);col(-21.2,-10.8,-.2,1);
+(function(){const g=new T.Group();g.position.set(-20.6,0,9.8);g.rotation.z=-.5;g.rotation.x=-.2;scene.add(g);
  cyl(.45,.7,7,0x6b4a2b,0,3.5,0,g);cyl(.15,.25,3,0x6b4a2b,1.4,6.2,0,g).rotation.z=-1;cyl(.12,.2,2.6,0x6b4a2b,-1.2,6.6,.3,g).rotation.z=1;
  [[0,8,0,3.2],[2.6,7.4,.6,2.6],[-2.4,7.2,-.5,2.5],[1,9.4,.8,2.2],[3.8,6.5,1.2,2]].forEach((a,i)=>ball(a[3],i%2?0x4a9a3c:0x3a8a34,a[0],a[1],a[2],g))})();
 col(-21.4,-19.8,9,10.6);
-for(let i=0;i<2;i++)box(2,.4,.6,0x7a4a2a,-78+i*5,.5,16);   // ghế sân phụ
+for(let i=0;i<2;i++)box(2,.4,.6,0x7a4a2a,-78+i*5,.5,16);
 box(5,.5,2,0x9a4a2e,-75,.25,22);ball(.9,0xe05a7a,-76,.9,22);ball(.8,0xf0c030,-74,.9,22);
+
+// Bảng Lưu Bút giữa sân (x = -2, z = 6)
+const gbTx=tex(512,320,(c,w,h)=>{c.fillStyle='#fff8e7';c.fillRect(0,0,w,h);c.strokeStyle='#b5121b';c.lineWidth=14;c.strokeRect(7,7,w-14,h-14);
+ c.fillStyle='#b5121b';c.font='bold 46px Arial';c.textAlign='center';c.fillText('SỔ LƯU BÚT',w/2,85);
+ c.fillStyle='#1c3f94';c.font='bold 28px Arial';c.fillText('KỶ NIỆM THPT NBK',w/2,140);
+ c.fillStyle='#333';c.font='24px Arial';c.fillText('Lại gần & bấm (E) để ghi lưu bút',w/2,225)});
+const gbStand=new T.Group();gbStand.position.set(-2,0,6);scene.add(gbStand);
+box(3.2,2,.14,0x8a3b2c,0,2,0,gbStand);sign(gbTx,2.9,1.75,0,2,.09,gbStand,true);
+cyl(.08,.08,2.5,0x5a3a22,-1.3,1.25,0,gbStand);cyl(.08,.08,2.5,0x5a3a22,1.3,1.25,0,gbStand);col(-3.6,-.4,5.7,6.3);
 
 /* ---------- nhà xe giáo viên, phòng bảo vệ ---------- */
 box(10,.25,8,0xc4262e,22,3.4,21);
@@ -186,17 +207,15 @@ function car(x,z,c){box(2,.7,4.4,c,x,.75,z);box(1.8,.65,2.3,c,x,1.4,z-.2);box(1.
  [[-1,-1.4],[1,-1.4],[-1,1.4],[1,1.4]].forEach(a=>{cyl(.36,.36,.25,0x111111,x+a[0],.36,z+a[1]).rotation.z=Math.PI/2});
  box(1.6,.15,.1,0xffffcc,x,.9,z+2.22);box(1.6,.15,.1,0xcc2222,x,.9,z-2.22);col(x-1,x+1,z-2.2,z+2.2)}
 car(19.5,21,0xffffff);car(22.5,21,0xd0d3d8);car(25.5,21,0x2a3a5a);
-
 box(3,3,3,0xf2d98a,15.5,1.5,19);box(3.6,.3,3.6,0xc4262e,15.5,3.15,19);col(14,17,17.5,20.5);
 
-/* ---------- bổ sung: khu cây xanh, nhà 2 tầng mái bằng, lối đi, vạch vàng ---------- */
-flat(49,12,0x74c944,-22.5,.05,19);                       // khu cây xanh (bên trái khi vào cổng chính)
+/* ---------- khu cây xanh, nhà 2 tầng mái bằng, lối đi ---------- */
+flat(49,12,0x74c944,-22.5,.05,19);
 [[-22.5,13,49,.35],[-22.5,25,49,.35],[2,19,.35,12]].forEach(a=>box(a[2],.35,a[3],0x9a4a3a,a[0],.2,a[1]));
 ball(.9,0x4aa03a,-3,.9,16);ball(.8,0x4aa03a,0,.8,21);ball(.7,0x4aa03a,-4,.7,23);
 tree(-2,20,1.5);palm(-5,15,1.1);palm(0,16,1.1);palm(0,24,1);palm(-5,24,1);
 col(-47,2,13,25);tree(-18,19,1.3);tree(-33,18,1.2);tree(-42,21,1.1);for(let x=-44;x<=-10;x+=8)ball(.9,0x4aa03a,x,.9,15.5);
-
-flat(3.6,14,0xbdb8ae,23.8,.03,-31.5);flat(3,14,0xbdb8ae,-9.5,.03,-31.5);flat(3,14,0xbdb8ae,-40.5,.03,-31.5);flat(3.9,14,0xbdb8ae,-70,.03,-31.5);   // lối đi giữa các dãy
+flat(3.6,14,0xbdb8ae,23.8,.03,-31.5);flat(3,14,0xbdb8ae,-9.5,.03,-31.5);flat(3,14,0xbdb8ae,-40.5,.03,-31.5);flat(3.9,14,0xbdb8ae,-70,.03,-31.5);
 (function(){const g=new T.Group();g.position.set(-52,0,20);g.rotation.y=-Math.PI/2;scene.add(g);const w=10,d=8;
  box(w,7.2,d,0xf2d98a,0,3.6,0,g);box(w+.5,.4,d+.5,0xb9b4a6,0,7.4,0,g);
  for(let f=0;f<2;f++){const y=3.6*f;if(f)box(w,.2,1.2,0xe0c070,0,y,d/2+.6,g);
@@ -204,7 +223,7 @@ flat(3.6,14,0xbdb8ae,23.8,.03,-31.5);flat(3,14,0xbdb8ae,-9.5,.03,-31.5);flat(3,1
  box(w,.8,.08,0xffffff,0,4.1,d/2+1.15,g)})();
 col(-56.5,-47.5,14.5,25.5);
 
-/* ---------- khu để xe học sinh (phía sau dãy chính) ---------- */
+/* ---------- khu để xe học sinh ---------- */
 box(60,.25,8,0xc4262e,0,3.4,-42);
 for(let x=-30;x<=30;x+=10)[-38,-46].forEach(z=>cyl(.1,.1,3.4,0x555555,x,1.7,z));
 const vb=(w,h,d,c,x,y,z)=>{const m=box(w,h,d,c,x,y,z);m.userData.flat=1;return m};
@@ -213,9 +232,9 @@ function bicycle(x,z,c){vw(.32,.04,x,.32,z-.5);vw(.32,.04,x,.32,z+.5);vb(.05,.05
 function ebike(x,z,c){vw(.27,.08,x,.27,z-.6);vw(.27,.08,x,.27,z+.6);vb(.3,.3,1,c,x,.5,z);vb(.3,.7,.1,c,x,.75,z+.55);vb(.28,.1,.6,0x222222,x,.78,z-.2);vb(.55,.05,.05,0x222222,x,1.05,z+.55)}
 function moped(x,z,c){vw(.3,.1,x,.3,z-.65);vw(.3,.1,x,.3,z+.65);vb(.36,.45,1.3,c,x,.55,z);vb(.34,.12,.7,0x222222,x,.88,z-.15);vb(.36,.8,.1,c,x,.8,z+.62);vb(.7,.06,.06,0x222222,x,1.17,z+.62);vb(.2,.2,.1,0xfff3a0,x,.95,z+.7)}
 const bcs=[0x2a5aa0,0x8a2a2a,0x2a7a4a,0x555555,0x7a4a9a],ecs=[0xf2f2f2,0x2a2a2a,0x2f6fd0,0xd33a3a,0x3aa66a],mcs=[0x1a1a1a,0xc02020,0x2a3a8a,0xe8e8e8];let vn=0;
-for(let x=-29;x<-10;x+=1)[-43.6,-40.4].forEach(z=>bicycle(x,z,bcs[vn++%5]));          // xe đạp
-for(let x=-9;x<8;x+=1.3)[-43.6,-40.4].forEach(z=>ebike(x,z,ecs[vn++%5]));             // xe đạp điện
-for(let x=9;x<30;x+=1.5)[-43.6,-40.4].forEach(z=>moped(x,z,mcs[vn++%4]));             // xe máy 50cc
+for(let x=-29;x<-10;x+=1)[-43.6,-40.4].forEach(z=>bicycle(x,z,bcs[vn++%5]));
+for(let x=-9;x<8;x+=1.3)[-43.6,-40.4].forEach(z=>ebike(x,z,ecs[vn++%5]));
+for(let x=9;x<30;x+=1.5)[-43.6,-40.4].forEach(z=>moped(x,z,mcs[vn++%4]));
 
 /* ---------- nhân vật: Đoàn Thị Thu Phương ---------- */
 const hero=new T.Group();scene.add(hero);
@@ -225,9 +244,9 @@ const legL=limb(-.15,.85,.85,.24,0x23262f),legR=limb(.15,.85,.85,.24,0x23262f);
 [legL,legR].forEach(l=>box(.26,.12,.4,0xffffff,0,-.82,.06,l));
 const armL=limb(-.4,1.45,.6,.15,0xffffff),armR=limb(.4,1.45,.6,.15,0xffffff);
 [armL,armR].forEach(a=>ball(.08,SK,0,-.63,0,a));
-const shirt=mk(.62,.72,.36,0xffffff,0,1.14,0);      // áo sơ mi trắng
-const belt=mk(.64,.1,.38,0x15171c,0,.84,0);        // thắt lưng (sơ vin)
-const hips=mk(.58,.16,.34,0x23262f,0,.76,0);       // quần âu
+const shirt=mk(.62,.72,.36,0xffffff,0,1.14,0);
+const belt=mk(.64,.1,.38,0x15171c,0,.84,0);
+const hips=mk(.58,.16,.34,0x23262f,0,.76,0);
 cyl(.07,.07,.1,SK,0,1.55,0,hero);
 ball(.25,SK,0,1.78,0,hero);
 const hcap=ball(.27,0x111111,0,1.83,-.05,hero);hcap.scale.set(1,.92,1);
@@ -235,20 +254,17 @@ const hfr=mk(.46,.1,.1,0x111111,0,1.98,.16);
 ball(.03,0x111111,-.09,1.78,.23,hero);ball(.03,0x111111,.09,1.78,.23,hero);
 const HP=[];for(const s of[-1,1]){HP.push(ball(.05,0xff4d6d,s*.27,1.72,-.02,hero));
  const t=cyl(.075,.03,.5,0x111111,s*.31,1.45,-.02,hero);t.rotation.z=s*.12;HP.push(t)}
-mk(.5,.62,.22,0x2a4a8a,0,1.12,-.29);mk(.38,.25,.06,0x3d63b3,0,.98,-.42);   // cặp
+mk(.5,.62,.22,0x2a4a8a,0,1.12,-.29);mk(.38,.25,.06,0x3d63b3,0,.98,-.42);
 mk(.07,.55,.02,0x1b2f5e,-.19,1.2,.19);mk(.07,.55,.02,0x1b2f5e,.19,1.2,.19);
 function drawNameCanvas(ctx2,str){ctx2.clearRect(0,0,512,96);ctx2.fillStyle='rgba(0,0,0,.55)';ctx2.fillRect(0,0,512,96);ctx2.fillStyle='#fff';ctx2.font='bold 44px Arial';ctx2.textAlign='center';ctx2.textBaseline='middle';ctx2.fillText(str,256,48,490)}
 const nameTx2=tex(512,96,(c)=>drawNameCanvas(c,'Đoàn Thị Thu Phương'));
 const sp=new T.Sprite(new T.SpriteMaterial({map:nameTx2,depthTest:false}));sp.scale.set(3.4,.64,1);sp.position.y=2.6;hero.add(sp);
-const up=new T.Group();up.position.y=.85;hero.add(up);   // thân trên, xoay quanh hông để cúi lạy
+const up=new T.Group();up.position.y=.85;hero.add(up);
 hero.children.slice().forEach(c=>{if(c===legL||c===legR||c===sp||c===up)return;c.position.y-=.85;up.add(c)});
 const P=hero.position;P.set(5.5,0,33);
+
 const OF=[{n:'Đồng phục',s:0xffffff,p:0x23262f,b:0x15171c,l:0},{n:'Áo dài trắng',s:0xffffff,p:0xffffff,b:0xffffff,l:1},{n:'Áo Đoàn thanh niên',s:0x2a52b8,p:0x23262f,b:0x15171c,l:0},{n:'Áo khoác mùa lạnh',s:0x2f3a52,p:0x6b7a8f,b:0x2f3a52,l:0}];
-const tailP=[box(.6,.85,.05,0xffffff,0,.45,.2,hero),box(.6,.85,.05,0xffffff,0,.45,-.2,hero)],ob=document.getElementById('outfit');let oi=0;
-function dress(k){const o=OF[k];oi=k;shirt.material=mat(o.s);hips.material=mat(o.p);belt.material=mat(o.b);
- [legL,legR].forEach(l=>l.children[0].material=mat(o.p));[armL,armR].forEach(a=>a.children[0].material=mat(o.s));
- tailP.forEach(t=>{t.visible=!!o.l;t.material=mat(o.s)});ob.textContent='👕 '+o.n+' (T)';syncNow()}
-ob.onclick=()=>dress((oi+1)%OF.length);addEventListener('keydown',e=>{if(e.code=='KeyT')dress((oi+1)%OF.length)});dress(0);
+const tailP=[box(.6,.85,.05,0xffffff,0,.45,.2,hero),box(.6,.85,.05,0xffffff,0,.45,-.2,hero)],ob=document.getElementById('outfit');
 const HC=0x111111,hsG=[];
 function hgrp(f){const g=new T.Group();g.visible=false;up.add(g);f(g);hsG.push(g);return g}
 const hLong=hgrp(g=>{box(.58,.6,.12,HC,0,.87,-.2,g);box(.1,.55,.2,HC,-.29,.87,0,g);box(.1,.55,.2,HC,.29,.87,0,g)});
@@ -257,11 +273,19 @@ const hPony=hgrp(g=>{ball(.06,0xff4d6d,0,1,-.27,g);cyl(.08,.03,.5,HC,0,.78,-.32,
 const HS=[{n:'Nữ – buộc hai bên',cap:[1,.92,1],fr:1,pt:1,g:null,m:0},{n:'Nữ – tóc dài xõa',cap:[1,.92,1],fr:1,pt:0,g:hLong,m:0},
  {n:'Nữ – tóc ngắn (bob)',cap:[1,.92,1],fr:1,pt:0,g:hBob,m:0},{n:'Nữ – đuôi ngựa',cap:[1,.92,1],fr:1,pt:0,g:hPony,m:0},
  {n:'Nam – tóc ngắn',cap:[1,.8,.95],fr:1,pt:0,g:null,m:1},{n:'Nam – tóc cua',cap:[.97,.62,.95],fr:0,pt:0,g:null,m:1}];
-const hbtn=document.getElementById('hairb');let hi=0;
+const hbtn=document.getElementById('hairb');
+let oi=0,hi=0,curName='Đoàn Thị Thu Phương',ch=null;
+
+function syncNow(){if(ch)ch.track({n:curName,x:+P.x.toFixed(2),y:+P.y.toFixed(2),z:+P.z.toFixed(2),r:+hero.rotation.y.toFixed(2),oi,hi})}
+function dress(k){const o=OF[k];oi=k;shirt.material=mat(o.s);hips.material=mat(o.p);belt.material=mat(o.b);
+ [legL,legR].forEach(l=>l.children[0].material=mat(o.p));[armL,armR].forEach(a=>a.children[0].material=mat(o.s));
+ tailP.forEach(t=>{t.visible=!!o.l;t.material=mat(o.s)});ob.textContent='👕 '+o.n+' (T)';syncNow()}
 function hair(k){const o=HS[k];hi=k;hcap.scale.set(o.cap[0],o.cap[1],o.cap[2]);hfr.visible=!!o.fr;HP.forEach(m=>m.visible=!!o.pt);hsG.forEach(g=>g.visible=(g===o.g));
  shirt.scale.x=belt.scale.x=hips.scale.x=o.m?1.1:1;hbtn.textContent='💇 '+o.n+' (H)';syncNow()}
-hbtn.onclick=()=>hair((hi+1)%HS.length);addEventListener('keydown',e=>{if(e.code=='KeyH')hair((hi+1)%HS.length)});hair(0);
-let curName='Đoàn Thị Thu Phương';
+
+ob.onclick=()=>dress((oi+1)%OF.length);addEventListener('keydown',e=>{if(e.code=='KeyT'&&document.activeElement.tagName!=='INPUT')dress((oi+1)%OF.length)});
+hbtn.onclick=()=>hair((hi+1)%HS.length);addEventListener('keydown',e=>{if(e.code=='KeyH'&&document.activeElement.tagName!=='INPUT')hair((hi+1)%HS.length)});
+dress(0);hair(0);
 document.getElementById('nameb').onclick=()=>{const t=prompt('Tên nhân vật:',curName);if(t){curName=t;drawNameCanvas(nameTx2.image.getContext('2d'),t);nameTx2.needsUpdate=true;syncNow()}};
 
 /* ---------- bảng tin sau cổng chính, khối cong đầu dãy phải ---------- */
@@ -272,7 +296,7 @@ box(3.6,2.3,.12,0x6b4a2b,0,2.1,0,bd);sign(bdTx,3.3,2,0,2.1,.08,bd);cyl(.08,.08,2
 box(.9,2.1,.1,0x8b2a2a,15.2,1.05,17.46);box(.8,.8,.1,0x5b7fa6,16.4,1.8,17.46);
 cyl(2.3,2.3,7.2,0xd9663a,27,3.6,10.5,null,16);col(24.6,27,8.2,12.8);
 
-/* ---------- phòng học 10C5 (bên trong, cách xa sân trường) ---------- */
+/* ---------- phòng học 10C5 & văn phòng ---------- */
 const RX=300,R=new T.Group();R.position.x=RX;scene.add(R);
 box(18,.2,13,0xcfc4ae,0,-.1,0,R);box(18,3.8,.3,0xf0e2a8,0,1.9,-6.5,R);box(.3,3.8,13,0xf0e2a8,-9,1.9,0,R);box(.3,3.8,13,0xf0e2a8,9,1.9,0,R);
 box(7.4,.08,.2,0xf0e2a8,0,0,0,R).visible=false;
@@ -283,7 +307,7 @@ drawBoard('10C5');
 const slTx=tex(512,48,(c,w,h)=>{c.fillStyle='#1c3f94';c.fillRect(0,0,w,h);c.fillStyle='#f5d142';c.font='bold 30px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('THI ĐUA DẠY TỐT, HỌC TỐT',w/2,h/2)});
 const exTx=tex(256,48,(c,w,h)=>{c.fillStyle='#1f7a3a';c.fillRect(0,0,w,h);c.fillStyle='#fff';c.font='bold 28px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('CỬA RA SÂN',w/2,h/2)});
 box(7.4,2.6,.1,0x7a5230,1.5,1.9,-6.3,R);sign(bbTx,7,2.3,1.5,1.9,-6.24,R);sign(slTx,5,.45,1.5,3.45,-6.3,R);
-box(2.8,1.6,.12,0x111111,-5.2,1.9,-6.3,R);box(2.6,1.4,.05,0xc0304a,-5.2,1.9,-6.22,R);          // tivi
+box(2.8,1.6,.12,0x111111,-5.2,1.9,-6.3,R);box(2.6,1.4,.05,0xc0304a,-5.2,1.9,-6.22,R);
 box(2.2,.8,1,0xb07a3a,-6.8,.4,-4.8,R);box(.6,1.2,.5,0xdfe7ee,-8.5,.6,-3.5,R);col(RX-7.9,RX-5.7,-5.3,-4.3);
 [-4,0,4].forEach(z=>{box(.12,1.7,2.2,0xd58a3c,8.8,2.2,z,R);box(.1,1.5,2,0xa9d6f0,8.74,2.2,z,R)});
 const SEATS=[];
@@ -292,7 +316,6 @@ const SEATS=[];
  SEATS.push({x:RX+x-.45,z:z+.8,o:0},{x:RX+x+.45,z:z+.8,o:0});col(RX+x-.9,RX+x+.9,z-.4,z+.95)}));
 box(.15,2.6,.15,0x6b4a2b,-1.6,1.3,6.5,R);box(.15,2.6,.15,0x6b4a2b,1.6,1.3,6.5,R);box(3.4,.15,.15,0x6b4a2b,0,2.6,6.5,R);sign(exTx,2.4,.45,0,3,6.5,R);
 
-/* khu văn phòng (dãy bên phải): phòng chờ giáo viên, phòng hồ sơ, phòng làm việc */
 const RX2=500,R2=new T.Group();R2.position.x=RX2;scene.add(R2);
 box(18,.2,13,0xd6c9aa,0,-.1,0,R2);box(18,3.8,.3,0xefe6c8,0,1.9,-6.5,R2);box(.3,3.8,13,0xefe6c8,-9,1.9,0,R2);box(.3,3.8,13,0xefe6c8,9,1.9,0,R2);
 box(7.4,1,.2,0xefe6c8,-5.3,.5,6.5,R2);box(7.4,1,.2,0xefe6c8,5.3,.5,6.5,R2);
@@ -314,13 +337,12 @@ const pl=new T.PointLight(0xffffff,.7,40);pl.position.set(RX,4,0);scene.add(pl);
 legL.rotation.x=legR.rotation.x=-1.45;armL.rotation.x=armR.rotation.x=-.9;
 [1,2,5,7,8,10,13,16].forEach(k=>{const n=hero.clone();n.remove(n.children.find(c=>c.isSprite));n.position.set(SEATS[k].x,-.38,SEATS[k].z);n.rotation.y=Math.PI;scene.add(n);SEATS[k].o=1});
 legL.rotation.x=legR.rotation.x=armL.rotation.x=armR.rotation.x=0;
-
 BSEATS.forEach(b=>SEATS.push(b));
 scene.traverse(o=>{if(o.isMesh&&!o.userData.flat&&o.material.isMeshLambertMaterial)o.castShadow=true;if(o.isMesh)o.receiveShadow=true});
 
-/* ---------- MULTIPLAYER SUPABASE REALTIME ---------- */
+/* ---------- MULTIPLAYER & SỔ LƯU BÚT SUPABASE ---------- */
 const myId='nbk_'+Math.random().toString(36).slice(2,10),others={};
-let ch=null,lastSync=0;
+let sb=null,lastSync=0;
 function spawnOther(name){
  const g=new T.Group();
  const lL=new T.Group();lL.position.set(-.15,.85,0);g.add(lL);box(.24,.85,.28,0x23262f,0,-.425,0,lL);box(.26,.12,.4,0xffffff,0,-.82,.06,lL);
@@ -349,10 +371,9 @@ function applyOtherLook(p,d){
  if(d.oi!==undefined&&d.oi!==p.oi&&OF[d.oi]){const o=OF[d.oi];p.oi=d.oi;p.sh.material=mat(o.s);p.hp.material=mat(o.p);p.bl.material=mat(o.b);p.lL.children[0].material=p.lR.children[0].material=mat(o.p);p.aL.children[0].material=p.aR.children[0].material=mat(o.s);p.tl.forEach(t=>{t.visible=!!o.l;t.material=mat(o.s)})}
  if(d.hi!==undefined&&d.hi!==p.hi&&HS[d.hi]){const o=HS[d.hi];p.hi=d.hi;p.hc.scale.set(o.cap[0],o.cap[1],o.cap[2]);p.hf.visible=!!o.fr;p.pt.forEach(m=>m.visible=!!o.pt);p.oGs.forEach((g,idx)=>{if(g)g.visible=(idx===d.hi)});p.sh.scale.x=p.bl.scale.x=p.hp.scale.x=o.m?1.1:1}
 }
-function syncNow(){if(ch)ch.track({n:curName,x:+P.x.toFixed(2),y:+P.y.toFixed(2),z:+P.z.toFixed(2),r:+hero.rotation.y.toFixed(2),oi,hi})}
 (function connectOnline(){
  if(!SUPABASE_URL.startsWith('http')||typeof supabase==='undefined')return;
- const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+ sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
  ch=sb.channel('thpt-nbk-room',{config:{presence:{key:myId}}});
  ch.on('presence',{event:'sync'},()=>{
   const st=ch.presenceState(),ids=Object.keys(st);
@@ -365,9 +386,54 @@ function syncNow(){if(ch)ch.track({n:curName,x:+P.x.toFixed(2),y:+P.y.toFixed(2)
  }).subscribe(s=>{if(s==='SUBSCRIBED')syncNow()});
 })();
 
+// Logic Sổ Lưu Bút
+const gbModal=document.getElementById('gbModal'),gbList=document.getElementById('gbList'),gbInput=document.getElementById('gbInput');
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+async function loadGuestbook(){
+ gbList.innerHTML='<div style="color:#666;font-size:13px">Đang tải lời nhắn...</div>';
+ if(!sb){gbList.innerHTML='<div class="gbItem"><b>Hệ thống</b>Chưa kết nối Supabase nên chưa tải được lưu bút online.</div>';return}
+ const {data,error}=await sb.from('guestbook').select('*').order('created_at',{ascending:false}).limit(30);
+ if(error){gbList.innerHTML='<div class="gbItem"><b>Lưu ý</b>Hãy tạo bảng <code>guestbook</code> trên Supabase theo hướng dẫn để bật sổ lưu bút.</div>';return}
+ if(!data||!data.length){gbList.innerHTML='<div style="color:#666;font-size:13px">Chưa có lời nhắn nào. Hãy là người đầu tiên lưu bút nhé!</div>';return}
+ gbList.innerHTML=data.map(r=>`<div class="gbItem"><b>${esc(r.name)}</b>${esc(r.message)}</div>`).join('');
+}
+function openGuestbook(){gbModal.style.display='flex';loadGuestbook()}
+document.getElementById('gbClose').onclick=()=>gbModal.style.display='none';
+document.getElementById('gbSend').onclick=async()=>{
+ const msg=gbInput.value.trim();if(!msg)return;
+ gbInput.value='';
+ if(sb)await sb.from('guestbook').insert([{name:curName,message:msg}]);
+ loadGuestbook();
+};
+gbInput.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('gbSend').click()});
+
+/* ---------- Âm thanh & Nhạc nền (Web Audio API) ---------- */
+let audioCtx=null,bgmOn=false,bgmTimer=null;
+const bgmBtn=document.getElementById('bgm');
+function playNote(freq,dur,type='sine',vol=.06){
+ if(!audioCtx)return;
+ const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+ o.type=type;o.frequency.value=freq;
+ g.gain.setValueAtTime(vol,audioCtx.currentTime);
+ g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+dur);
+ o.connect(g);g.connect(audioCtx.destination);
+ o.start();o.stop(audioCtx.currentTime+dur);
+}
+bgmBtn.onclick=()=>{
+ if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+ if(audioCtx.state==='suspended')audioCtx.resume();
+ bgmOn=!bgmOn;
+ bgmBtn.textContent=bgmOn?'🔊 Nhạc nền: Bật':'🔇 Nhạc nền: Tắt';
+ if(bgmOn){
+  playNote(110,1.2,'triangle',.18);
+  const notes=[523.25,659.25,783.99,659.25,587.33,698.46,880,783.99];let idx=0;
+  bgmTimer=setInterval(()=>{if(bgmOn){playNote(notes[idx++%notes.length],.9,'sine',.045)}},750);
+ }else clearInterval(bgmTimer);
+};
+
 /* ---------- điều khiển ---------- */
 const subhud=document.getElementById('subhud'),H0=subhud.innerHTML;const k={};
-addEventListener('keydown',e=>{k[e.code]=1;if(e.code.startsWith('Arrow'))e.preventDefault()});
+addEventListener('keydown',e=>{if(document.activeElement.tagName==='INPUT')return;k[e.code]=1;if(e.code.startsWith('Arrow'))e.preventDefault()});
 addEventListener('keyup',e=>k[e.code]=0);
 let jx=0,jz=0;const joy=document.getElementById('joy'),kn=document.getElementById('knob');
 function jset(e){const r=joy.getBoundingClientRect();let dx=e.clientX-r.left-60,dy=e.clientY-r.top-60;const l=Math.hypot(dx,dy),m=45;
@@ -382,7 +448,7 @@ addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProje
 const clock=new T.Clock();let ph=0,inside=false,snap=0,fl=0,bi=0,ctx=null,A1=0,A2=0,lastKey='',climb=null,sit=null,pray=null,IX=300;cam.position.set(P.x,9,P.z+14);
 const act=document.getElementById('act'),ab1=document.getElementById('a1'),ab2=document.getElementById('a2');
 ab1.onclick=()=>A1&&A1.f();ab2.onclick=()=>A2&&A2.f();
-addEventListener('keydown',e=>{if(e.code=='KeyE'&&A1)A1.f();if(e.code=='KeyQ'&&A2)A2.f()});
+addEventListener('keydown',e=>{if(document.activeElement.tagName==='INPUT')return;if(e.code=='KeyE'&&A1)A1.f();if(e.code=='KeyQ'&&A2)A2.f()});
 function place(b,lx,lz){P.x=b.cx+lx*b.co+lz*b.si;P.z=b.cz-lx*b.si+lz*b.co}
 function go(i,f){climb={i,from:fl,to:f,t:0,y:0};bi=i}
 function stand(){P.set(sit.x+(sit.ex||0),0,sit.z+(sit.ez===undefined?.6:sit.ez));sit=null}
@@ -413,7 +479,10 @@ function leave(){sit=null;const b=BL[ctx.bi];inside=false;fl=ctx.f;bi=ctx.bi;pla
   if(k2>=0){const nm=b.names[fl][k2],lb=b.off?(nm?nm.replace('|',' ').toLowerCase():'phòng làm việc'):'lớp '+nm;o1={t:'Vào '+lb+' (E)',f:()=>enter(i,nm,b.rms[k2])}}
   else if(Math.abs(lx)<2.4){if(fl<2)o1={t:'▲ Lên tầng '+(fl+2)+' (E)',f:()=>go(i,fl+1)};if(fl>0)o2={t:'▼ Xuống '+(fl==1?'sân':'tầng '+fl)+' (Q)',f:()=>go(i,fl-1)}}
   break}
- if(!inside&&!climb&&!sit&&!pray&&!fl&&!o1&&P.x>-19.2&&P.x<-12.8&&P.z>5.5&&P.z<8.6)o1={t:'Lạy cụ Nguyễn Bỉnh Khiêm (E)',f:startPray};
+ if(!inside&&!climb&&!sit&&!pray&&!fl&&!o1){
+  if(Math.hypot(P.x+2,P.z-6)<2.6)o1={t:'📖 Mở Sổ Lưu Bút (E)',f:openGuestbook};
+  else if(P.x>-19.2&&P.x<-12.8&&P.z>5.5&&P.z<8.6)o1={t:'Lạy cụ Nguyễn Bỉnh Khiêm (E)',f:startPray};
+ }
  A1=o1;A2=o2;const key=(o1?o1.t:'')+'|'+(o2?o2.t:'');
  if(key!==lastKey){lastKey=key;ab1.style.display=o1?'block':'none';ab2.style.display=o2?'block':'none';ab1.textContent=o1?o1.t:'';ab2.textContent=o2?o2.t:'';act.style.display=(o1||o2)?'flex':'none'}
  const sw=Math.sin(ph)*(l>.1||climb?.7:0);legL.rotation.x=sw;legR.rotation.x=-sw;armL.rotation.x=-sw*.8;armR.rotation.x=sw*.8;if(sit){legL.rotation.x=legR.rotation.x=-1.45;armL.rotation.x=armR.rotation.x=-.9}
@@ -423,7 +492,6 @@ function leave(){sit=null;const b=BL[ctx.bi];inside=false;fl=ctx.f;bi=ctx.bi;pla
  P.y=climb?climb.y:(fl?3.6*fl+.1:0)+Math.abs(Math.sin(ph))*(l>.1?.05:0);if(sit)P.y=sit.h===undefined?-.38:sit.h;
  flagP.rotation.y=Math.sin(t*3)*.15;
 
- // Đồng bộ tọa độ khi di chuyển
  if(ch&&t-lastSync>.1&&(l>.1||climb||sit)){lastSync=t;syncNow()}
  Object.values(others).forEach(o=>{o.m.position.x+=(o.tx-o.m.position.x)*.18;o.m.position.y+=(o.ty-o.m.position.y)*.18;o.m.position.z+=(o.tz-o.m.position.z)*.18;o.m.rotation.y=o.tr});
 
