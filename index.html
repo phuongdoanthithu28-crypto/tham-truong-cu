@@ -30,13 +30,72 @@ html,body{margin:0;height:100%;overflow:hidden;background:#9fd3f5;font-family:Ar
 .gbForm{display:flex;gap:8px}
 .gbForm input{flex:1;padding:10px;border:2px solid #ccc;border-radius:9px;font-size:14px}
 .gbForm button{background:#1f7a3a;color:#fff;border:0;border-radius:9px;padding:0 16px;font-weight:bold;cursor:pointer}
+#minimap{position:fixed;top:64px;left:12px;width:140px;height:110px;border-radius:12px;border:2px solid rgba(255,255,255,.85);background:rgba(20,35,25,.75);box-shadow:0 4px 12px #0006;z-index:5;cursor:pointer}
+#codeBtn,#photoBtn{position:fixed;right:12px;font-size:14px;padding:9px 13px;border:0;border-radius:12px;color:#fff;font-weight:bold;box-shadow:0 2px 6px #0006;cursor:pointer;z-index:5}
+#codeBtn{top:204px;background:#1c3f94}#photoBtn{top:244px;background:#b5121b}
+.modalOv{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:25;touch-action:auto}
+.modalCard{background:#fffdf7;width:92%;max-width:440px;border-radius:14px;padding:18px;box-shadow:0 10px 30px #0009;border:3px solid #1c3f94;display:flex;flex-direction:column;gap:10px;max-height:84vh;overflow-y:auto;color:#222}
+.tpGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tpGrid button{padding:10px;border:1.5px solid #1c3f94;border-radius:10px;background:#eef3fc;color:#1c3f94;font-weight:bold;cursor:pointer;font-size:13.5px}
+.tpGrid button:hover{background:#1c3f94;color:#fff}
 </style></head><body>
 <div id="hud"><b>Trường THPT Nguyễn Bỉnh Khiêm</b><div id="online">🟢 Đang trong trường: 1 học sinh</div><span id="subhud">Phím mũi tên / WASD hoặc cần gạt (điện thoại) để di chuyển</span></div>
 <button id="outfit"></button><button id="hairb"></button><button id="nameb">✏️ Đổi tên</button><button id="bgm">🔇 Nhạc nền: Tắt</button>
 <div id="act"><button id="a1"></button><button id="a2"></button></div>
 <div id="joy"><div id="knob"></div></div>
 
+<canvas id="minimap" width="280" height="220" title="Bấm để mở bản đồ & dịch chuyển nhanh"></canvas>
+<button id="codeBtn">🪪 Mã của bạn</button>
+<button id="photoBtn">📸 Chụp ảnh</button>
+
 <div id="bar">
+  <button id="tpBtn">🧭<br>Đi tới</button>
+  <button id="classBtn">🏫<br>Lớp học</button>
+  <button id="poseBtn">🧍<br>Tư thế</button>
+  <button id="chatBtn">💬<br>Chat</button>
+</div>
+
+<!-- Modal Đi tới -->
+<div class="modalOv" id="tpModal"><div class="modalCard">
+  <div class="gbHead"><h3>🧭 Đi tới nhanh…</h3><button class="gbClose" onclick="tpModal.style.display='none'">Đóng</button></div>
+  <div class="tpGrid">
+    <button onclick="teleportTo(7.5, 29)">⛩️ Cổng trường chính</button>
+    <button onclick="teleportTo(2, -17)">🥁 Trống trường</button>
+    <button onclick="teleportTo(-16, 7)">🗿 Tượng cụ NBK</button>
+    <button onclick="teleportTo(-11, 16)">🌸 Cây phượng lưu bút</button>
+    <button onclick="teleportTo(-2, 8)">📖 Sổ lưu bút sân trường</button>
+    <button onclick="teleportTo(82, 35)">🌉 Cầu Lạng Am</button>
+    <button onclick="teleportTo(75, 53)">🧋 Quán nước bờ kênh</button>
+    <button onclick="teleportTo(-25, -24)">🏫 Khu dãy lớp học</button>
+  </div>
+</div></div>
+
+<!-- Modal Mã định danh -->
+<div class="modalOv" id="idModal"><div class="modalCard">
+  <div class="gbHead"><h3>🪪 Mã định danh của bạn</h3><button class="gbClose" onclick="idModal.style.display='none'">Đóng</button></div>
+  <p style="margin:0;font-size:13.5px">Dùng tên và mã này khi mở trên điện thoại/máy khác để giữ đúng nhân vật và lớp của bạn:</p>
+  <div id="myCodeShow" style="font-size:24px;font-weight:bold;text-align:center;letter-spacing:4px;background:#eef3fc;padding:12px;border-radius:10px;color:#1c3f94"></div>
+  <div style="border-top:1px solid #ddd;padding-top:10px">
+    <b style="font-size:13px">Đã vào từ máy khác? Khôi phục hồ sơ:</b>
+    <div style="display:flex;gap:6px;margin-top:6px">
+      <input id="recName" placeholder="Họ tên cũ" style="flex:1;padding:8px;border:1.5px solid #ccc;border-radius:8px">
+      <input id="recCode" placeholder="Mã 6 ký tự" maxlength="6" style="width:100px;padding:8px;border:1.5px solid #ccc;border-radius:8px;text-transform:uppercase">
+      <button id="recBtn" style="background:#1f7a3a;color:#fff;border:0;border-radius:8px;padding:0 12px;font-weight:bold;cursor:pointer">Khôi phục</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- Modal Nhận phòng & Sổ lớp -->
+<div class="modalOv" id="clsModal"><div class="modalCard">
+  <div class="gbHead"><h3>🏫 Nhận phòng & Sổ lớp</h3><button class="gbClose" onclick="clsModal.style.display='none'">Đóng</button></div>
+  <div id="clsStatus" style="font-size:13.5px;background:#f2f5fa;padding:10px;border-radius:8px"></div>
+  <div id="clsClaimForm" style="display:none;flex-direction:column;gap:8px">
+    <input id="inpClass" placeholder="Tên lớp (VD: 12A1, 10C5)" style="padding:8px;border:1.5px solid #ccc;border-radius:8px">
+    <input id="inpYear" placeholder="Niên khóa (VD: 2021 - 2024)" style="padding:8px;border:1.5px solid #ccc;border-radius:8px">
+    <button id="claimBtn" style="background:#1c3f94;color:#fff;border:0;border-radius:8px;padding:10px;font-weight:bold;cursor:pointer">✅ Xác nhận nhận phòng này</button>
+  </div>
+  <div id="clsList" style="display:flex;flex-direction:column;gap:6px;font-size:13px"></div>
+</div></div>
   <button id="poseBtn">🧍<br>Tư thế</button>
   <button id="chatBtn">💬<br>Chat</button>
 </div>
@@ -524,6 +583,279 @@ document.getElementById('chatSend').onclick=()=>{
 chatInp.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('chatSend').click()});
 
 /* ---------- vòng lặp ---------- */
+/* ==========================================================================
+   MỞ RỘNG BẢN ĐỒ NGOẠI VI, CẦU LẠNG AM, GIAO THÔNG, NPC & HOẠT ĐỘNG TRƯỜNG
+   ========================================================================== */
+
+// 1. MÃ ĐỊNH DANH CÁ NHÂN (LOCALSTORAGE)
+let mySecretCode = localStorage.getItem('nbk_code');
+if (!mySecretCode) {
+  mySecretCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+  localStorage.setItem('nbk_code', mySecretCode);
+}
+const savedName = localStorage.getItem('nbk_name');
+if (savedName) {
+  curName = savedName;
+  drawNameCanvas(nameTx2.image.getContext('2d'), curName);
+  nameTx2.needsUpdate = true;
+}
+document.getElementById('codeBtn').onclick = () => {
+  document.getElementById('myCodeShow').textContent = mySecretCode;
+  document.getElementById('idModal').style.display = 'flex';
+};
+document.getElementById('recBtn').onclick = () => {
+  const rn = document.getElementById('recName').value.trim();
+  const rc = document.getElementById('recCode').value.trim().toUpperCase();
+  if (!rn || rc.length < 4) return alert('Vui lòng nhập đủ tên và mã 6 ký tự!');
+  curName = rn; mySecretCode = rc;
+  localStorage.setItem('nbk_name', rn); localStorage.setItem('nbk_code', rc);
+  drawNameCanvas(nameTx2.image.getContext('2d'), rn); nameTx2.needsUpdate = true;
+  syncNow(); idModal.style.display = 'none';
+};
+
+// 2. MỞ RỘNG MẶT ĐẤT, DÒNG KÊNH & CẦU LẠNG AM (TẠI X = 64 -> 100)
+const waterMat = new T.MeshLambertMaterial({ color: 0x2b8cbe });
+const river = new T.Mesh(new T.PlaneGeometry(500, 11), waterMat);
+river.rotation.x = -Math.PI / 2; river.position.set(20, 0.03, 46); river.userData.flat = 1; scene.add(river);
+
+// Nhánh sông cắt ngang đường để bắc Cầu Lạng Am (tại x = 82)
+const crossRiver = new T.Mesh(new T.PlaneGeometry(18, 160), waterMat);
+crossRiver.rotation.x = -Math.PI / 2; crossRiver.position.set(82, 0.04, 15); crossRiver.userData.flat = 1; scene.add(crossRiver);
+
+// Hàm tính độ cao mặt cầu Lạng Am theo tọa độ X (tâm cầu tại x = 82, dài 28m)
+function getBridgeY(x) {
+  const dx = Math.abs(x - 82);
+  if (dx > 14) return 0;
+  return Math.cos((dx / 14) * (Math.PI / 2)) * 2.4;
+}
+
+// Dựng kết cấu 3D Cầu Lạng Am
+const bridgeG = new T.Group(); scene.add(bridgeG);
+for (let bx = 68; bx < 96; bx += 1) {
+  const y1 = getBridgeY(bx), y2 = getBridgeY(bx + 1), ym = (y1 + y2) / 2;
+  const seg = box(1.08, 0.35, 11.2, 0x6b7078, bx + 0.5, ym, 35, bridgeG);
+  seg.rotation.z = Math.atan2(y2 - y1, 1);
+  // Lan can cầu 2 bên
+  box(1.05, 0.9, 0.22, 0xf2f0e6, bx + 0.5, ym + 0.55, 29.6, bridgeG);
+  box(1.05, 0.9, 0.22, 0xf2f0e6, bx + 0.5, ym + 0.55, 40.4, bridgeG);
+}
+// Trụ đèn & Biển tên Cầu Lạng Am
+const bridgeSignTx = tex(256, 64, (c, w, h) => {
+  c.fillStyle = '#1c3f94'; c.fillRect(0, 0, w, h); c.strokeStyle = '#fff'; c.lineWidth = 4; c.strokeRect(4, 4, w - 8, h - 8);
+  c.fillStyle = '#fff'; c.font = 'bold 26px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('CẦU LẠNG AM', w / 2, h / 2);
+});
+[68, 96].forEach(px => {
+  box(0.7, 2.2, 0.7, 0xf2f0e6, px, 1.1, 29.6, bridgeG);
+  box(0.7, 2.2, 0.7, 0xf2f0e6, px, 1.1, 40.4, bridgeG);
+  sign(bridgeSignTx, 2.2, 0.55, px, 1.8, 29.2, bridgeG, true);
+});
+
+// 3. KHU NHÀ DÂN & HÀNG QUÁN BỜ KÊNH ĐỐI DIỆN CỔNG TRƯỜNG (Z = 54)
+flat(320, 16, 0xc8c3b8, 10, 0.02, 56);
+// Cầu nhỏ bắc qua kênh từ cổng trường sang quán nước (tại x = 8)
+box(5, 0.3, 12, 0x9e9a90, 8, 0.25, 46);
+box(0.2, 0.8, 12, 0xd8d4ca, 5.6, 0.7, 46); box(0.2, 0.8, 12, 0xd8d4ca, 10.4, 0.7, 46);
+
+const shopColors = [0xf4e3b2, 0xd9e8f5, 0xf7d6d0, 0xe2f0d9, 0xfff2cc];
+const shopNames = ['TRÀ ĐÁ CỔNG TRƯỜNG', 'PHOTOCOPY - IN ẤN', 'BÁNH MÌ & XÔI SÁNG', 'HIỆU SÁCH HỌC SINH', 'TẠP HÓA CÔ LAN'];
+for (let i = 0; i < 5; i++) {
+  const sx = -26 + i * 16;
+  const h = 4 + (i % 2) * 3.2;
+  box(11, h, 8, shopColors[i], sx, h / 2, 57);
+  box(11.6, 0.35, 8.6, 0xb5382a, sx, h + 0.15, 57);
+  // Mái hiên quán
+  box(10.5, 0.15, 2.6, i % 2 ? 0x1f7a3a : 0x1c3f94, sx, 2.8, 52.2).rotation.x = 0.2;
+  const stx = tex(256, 48, (c, w, h2) => {
+    c.fillStyle = '#fff'; c.fillRect(0, 0, w, h2); c.fillStyle = '#b5121b'; c.font = 'bold 20px Arial';
+    c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(shopNames[i], w / 2, h2 / 2);
+  });
+  sign(stx, 6, 0.75, sx, 3.3, 52.9, scene, true);
+  // Bàn ghế nhựa quán nước
+  if (i === 0 || i === 2) {
+    box(1.1, 0.5, 1.1, 0x2b6cb0, sx - 2, 0.25, 51.2);
+    box(0.45, 0.35, 0.45, 0xd8201f, sx - 2.9, 0.18, 51.2);
+    box(0.45, 0.35, 0.45, 0xd8201f, sx - 1.1, 0.18, 51.2);
+  }
+  col(sx - 5.6, sx + 5.6, 52.8, 61);
+  tree(sx + 7.5, 52, 1.1);
+}
+
+// 4. HỆ THỐNG GIAO THÔNG CHẠY 2 CHIỀU (Ô TÔ, XE MÁY, XE ĐẠP) & NGƯỜI ĐI BỘ
+const VEHICLES = [];
+function spawnMovingCar(color, dir, x0) {
+  const g = new T.Group();
+  box(4.2, 0.75, 1.95, color, 0, 0.65, 0, g);
+  box(2.2, 0.65, 1.75, color, -0.2, 1.3, 0, g);
+  box(2.0, 0.45, 1.78, 0x223344, -0.2, 1.35, 0, g);
+  [[-1.3, -0.95], [1.3, -0.95], [-1.3, 0.95], [1.3, 0.95]].forEach(w => {
+    cyl(0.36, 0.36, 0.24, 0x111111, w[0], 0.36, w[1], g).rotation.x = Math.PI / 2;
+  });
+  box(0.1, 0.18, 1.5, 0xffffaa, 2.11, 0.75, 0, g); // đèn pha
+  scene.add(g);
+  VEHICLES.push({ g, dir, x: x0, z: dir > 0 ? 36.8 : 33.2, baseSpd: 11 + Math.random() * 4, spd: 12, len: 4.5 });
+}
+
+function spawnMovingBike(color, dir, x0, isMoto) {
+  const g = new T.Group();
+  cyl(0.3, 0.3, 0.1, 0x111111, -0.65, 0.3, 0, g).rotation.x = Math.PI / 2;
+  cyl(0.3, 0.3, 0.1, 0x111111, 0.65, 0.3, 0, g).rotation.x = Math.PI / 2;
+  box(1.1, isMoto ? 0.42 : 0.15, isMoto ? 0.34 : 0.12, color, 0, 0.58, 0, g);
+  box(0.12, 0.55, 0.55, 0x222222, 0.5, 0.95, 0, g); // ghi đông
+  // Người lái xe
+  box(0.32, 0.62, 0.42, isMoto ? 0x2a52b8 : 0xffffff, -0.1, 1.15, 0, g);
+  ball(0.2, isMoto ? 0xd8201f : 0xf1c9a5, -0.05, 1.65, 0, g); // mũ bảo hiểm / đầu
+  scene.add(g);
+  VEHICLES.push({ g, dir, x: x0, z: dir > 0 ? 38.4 : 31.6, baseSpd: isMoto ? (8 + Math.random() * 3) : (4.2 + Math.random() * 1.5), spd: 7, len: 2.2 });
+}
+
+// Khởi tạo đoàn xe 2 chiều
+[0xffffff, 0xc0392b, 0x2c3e50, 0xf1c40f].forEach((c, i) => spawnMovingCar(c, i % 2 ? 1 : -1, -110 + i * 65));
+[0x1a1a1a, 0xd8201f, 0x2980b9, 0x27ae60, 0x8e44ad, 0xe67e22].forEach((c, i) => {
+  spawnMovingBike(c, i % 2 ? 1 : -1, -120 + i * 42, i % 3 !== 0);
+});
+
+// Người đi bộ trên vỉa hè & qua cầu Lạng Am
+const NPCS = [];
+function spawnPedestrian(x0, z0, dir, shirtColor, isStudent) {
+  const g = new T.Group();
+  const l1 = box(0.18, 0.78, 0.2, 0x23262f, 0, 0.4, -0.12, g);
+  const l2 = box(0.18, 0.78, 0.2, 0x23262f, 0, 0.4, 0.12, g);
+  box(0.32, 0.68, 0.54, shirtColor, 0, 1.12, 0, g);
+  ball(0.22, SK, 0, 1.72, 0, g);
+  ball(0.23, 0x111111, -0.04, 1.77, 0, g);
+  if (isStudent) box(0.18, 0.5, 0.42, 0x2a4a8a, -0.24, 1.15, 0, g); // balo học sinh
+  scene.add(g);
+  NPCS.push({ g, l1, l2, x: x0, z: z0, dir, spd: 1.5 + Math.random() * 0.7, phase: Math.random() * 6 });
+}
+for (let i = 0; i < 10; i++) {
+  spawnPedestrian(-85 + i * 21, i % 2 ? 27.6 : 28.8, i % 2 ? 1 : -1, i % 3 === 0 ? 0xffffff : (i % 3 === 1 ? 0x2a52b8 : 0xe07a5f), i % 2 === 0);
+}
+
+// 5. TRỐNG TRƯỜNG & CÂY PHƯỢNG LƯU BÚT
+// Trống trường tại sảnh tòa chính (x = 1.5, z = -19)
+const drumG = new T.Group(); drumG.position.set(1.5, 0, -19); scene.add(drumG);
+box(0.15, 1.4, 1.1, 0x5a3318, -0.5, 0.7, 0, drumG);
+box(0.15, 1.4, 1.1, 0x5a3318, 0.5, 0.7, 0, drumG);
+const drumBody = cyl(0.55, 0.55, 1.15, 0xb5121b, 0, 1.15, 0, drumG, 20);
+drumBody.rotation.z = Math.PI / 2;
+cyl(0.56, 0.56, 0.05, 0xf5deb3, -0.58, 1.15, 0, drumG, 20).rotation.z = Math.PI / 2;
+cyl(0.56, 0.56, 0.05, 0xf5deb3, 0.58, 1.15, 0, drumG, 20).rotation.z = Math.PI / 2;
+col(0.8, 2.2, -19.7, -18.3);
+
+let drumShake = 0;
+function hitSchoolDrum() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  // Tiếng trống "TÙNG... TÙNG... TÙNG..."
+  [0, 0.45, 0.9].forEach(delay => {
+    setTimeout(() => {
+      playNote(78, 0.75, 'triangle', 0.45);
+      playNote(52, 0.85, 'sine', 0.5);
+      drumShake = 0.25;
+    }, delay * 1000);
+  });
+  subhud.innerHTML = '🥁 <b>TÙNG! TÙNG! TÙNG!</b> Tiếng trống trường NBK vang vọng cả sân trường!';
+  setTimeout(() => { subhud.innerHTML = H0; }, 3500);
+}
+
+// Cây phượng lưu bút góc sân (x = -11, z = 13)
+const phoenixG = new T.Group(); phoenixG.position.set(-11, 0, 13); scene.add(phoenixG);
+cyl(0.35, 0.55, 4.2, 0x5c3d24, 0, 2.1, 0, phoenixG);
+[[0, 5.2, 0, 3.1], [2.1, 4.6, 0.8, 2.3], [-2.0, 4.8, -0.6, 2.4], [0.5, 6.4, -0.5, 2.1]].forEach(a => {
+  ball(a[3], 0xd82828, a[0], a[1], a[2], phoenixG); // tán hoa phượng đỏ
+});
+// Các dải ruy băng lưu bút treo trên cây phượng
+for (let r = 0; r < 14; r++) {
+  const ang = (r / 14) * Math.PI * 2;
+  box(0.08, 0.65, 0.03, r % 2 ? 0xffd23a : 0xff6b81, Math.cos(ang) * 2.2, 3.6 + (r % 3) * 0.3, Math.sin(ang) * 2.2, phoenixG);
+}
+col(-11.7, -10.3, 12.3, 13.7);
+
+// 6. MENU ĐI TỚI (TELEPORT) & CHỤP ẢNH CHUNG
+const tpModal = document.getElementById('tpModal');
+document.getElementById('tpBtn').onclick = () => tpModal.style.display = 'flex';
+function teleportTo(tx, tz) {
+  if (inside) leave();
+  fl = 0; sit = null; climb = null;
+  P.set(tx, getBridgeY(tx), tz);
+  snap = 1; tpModal.style.display = 'none';
+}
+
+document.getElementById('photoBtn').onclick = () => {
+  ren.render(scene, cam);
+  const url = ren.domElement.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ky-niem-thpt-nbk.png'; a.click();
+  subhud.innerHTML = '📸 <b>Đã lưu ảnh chụp kỷ niệm trong sân trường!</b>';
+  setTimeout(() => { subhud.innerHTML = H0; }, 3000);
+};
+
+// 7. NHẬN PHÒNG LỚP THEO NIÊN KHÓA (SUPABASE)
+const clsModal = document.getElementById('clsModal');
+let nearRoomId = null;
+document.getElementById('classBtn').onclick = () => openClassModal(null);
+
+async function openClassModal(roomId) {
+  nearRoomId = roomId;
+  clsModal.style.display = 'flex';
+  const stEl = document.getElementById('clsStatus');
+  const fmEl = document.getElementById('clsClaimForm');
+  const lsEl = document.getElementById('clsList');
+  fmEl.style.display = roomId ? 'flex' : 'none';
+  stEl.innerHTML = roomId
+    ? `Bạn đang đứng trước cửa phòng <b>${roomId}</b>. Nếu phòng chưa có khóa nào nhận, bạn có thể đăng ký cho lớp mình!`
+    : 'Hãy đứng trước cửa một phòng học bất kỳ rồi bấm <b>Nhận phòng (Q)</b> để đăng ký lớp của bạn.';
+  if (!sb) { lsEl.innerHTML = '<i>Chưa kết nối Supabase.</i>'; return; }
+  const { data, error } = await sb.from('school_classes').select('*').order('created_at', { ascending: false });
+  if (error) {
+    lsEl.innerHTML = '<div class="gbItem"><b>Hướng dẫn</b>Tạo bảng <code>school_classes</code> (cột: <code>room_id</code>, <code>class_name</code>, <code>school_year</code>, <code>owner_name</code>) trên Supabase để bật tính năng nhận phòng.</div>';
+    return;
+  }
+  lsEl.innerHTML = '<b>Danh sách các lớp đã nhận phòng:</b>' + (data.length
+    ? data.map(c => `<div class="gbItem"><b>Phòng ${esc(c.room_id)} – Lớp ${esc(c.class_name)} (${esc(c.school_year)})</b>Đại diện: ${esc(c.owner_name)}</div>`).join('')
+    : '<div>Chưa có lớp nào nhận phòng.</div>');
+}
+
+document.getElementById('claimBtn').onclick = async () => {
+  const cn = document.getElementById('inpClass').value.trim();
+  const sy = document.getElementById('inpYear').value.trim();
+  if (!cn || !sy || !nearRoomId) return alert('Vui lòng nhập tên lớp và niên khóa!');
+  if (sb) {
+    await sb.from('school_classes').insert([{ room_id: nearRoomId, class_name: cn, school_year: sy, owner_name: curName }]);
+    openClassModal(nearRoomId);
+  }
+};
+
+// 8. MINIMAP 2D GÓC MÀN HÌNH
+const mmCanvas = document.getElementById('minimap');
+const mmCtx = mmCanvas.getContext('2d');
+mmCanvas.onclick = () => tpModal.style.display = 'flex';
+
+function drawMinimap() {
+  const w = mmCanvas.width, h = mmCanvas.height;
+  mmCtx.clearRect(0, 0, w, h);
+  const toX = x => ((x + 110) / 250) * w;
+  const toY = z => ((z + 65) / 130) * h;
+
+  // Nền cỏ & sân trường
+  mmCtx.fillStyle = '#4e8c38'; mmCtx.fillRect(0, 0, w, h);
+  mmCtx.fillStyle = '#bdb8ae'; mmCtx.fillRect(toX(-86), toY(-36), toX(40) - toX(-86), toY(26) - toY(-36));
+  // Đường & Kênh & Cầu Lạng Am
+  mmCtx.fillStyle = '#3c4045'; mmCtx.fillRect(0, toY(30), w, 16);
+  mmCtx.fillStyle = '#2b8cbe'; mmCtx.fillRect(0, toY(41), w, 16);
+  mmCtx.fillRect(toX(75), 0, 20, h);
+  mmCtx.fillStyle = '#e6c25a'; mmCtx.fillRect(toX(68), toY(29), toX(96) - toX(68), 18); // Cầu Lạng Am
+  // Các dãy nhà
+  mmCtx.fillStyle = '#d8203a';
+  BL.forEach(b => mmCtx.fillRect(toX(b.cx - b.hw), toY(b.cz - 4), (b.hw * 2 / 250) * w, 12));
+  // Người chơi khác
+  Object.values(others).forEach(o => {
+    mmCtx.fillStyle = '#00f2fe'; mmCtx.beginPath(); mmCtx.arc(toX(o.m.position.x), toY(o.m.position.z), 4.5, 0, 7); mmCtx.fill();
+  });
+  // Bạn (chấm vàng viền đỏ)
+  mmCtx.fillStyle = '#ffeb3b'; mmCtx.strokeStyle = '#b5121b'; mmCtx.lineWidth = 2.5;
+  mmCtx.beginPath(); mmCtx.arc(toX(P.x), toY(P.z), 6, 0, 7); mmCtx.fill(); mmCtx.stroke();
+}
 const clock=new T.Clock();let ph=0,inside=false,snap=0,fl=0,bi=0,ctx=null,A1=0,A2=0,lastKey='',climb=null,sit=null,pray=null,IX=300;cam.position.set(P.x,9,P.z+14);
 const act=document.getElementById('act'),ab1=document.getElementById('a1'),ab2=document.getElementById('a2');
 ab1.onclick=()=>A1&&A1.f();ab2.onclick=()=>A2&&A2.f();
@@ -543,8 +875,8 @@ function leave(){sit=null;const b=BL[ctx.bi];inside=false;fl=ctx.f;bi=ctx.bi;pla
  if(l>.1){
   if(poseIdx===1||poseIdx===2)setPose(0);
   const nx=P.x+ix*6*dt,nz=P.z+iz*6*dt;
-  if(fl){const b=BL[bi],dx=nx-b.cx,dz=nz-b.cz;let lx=dx*b.co-dz*b.si,lz=dx*b.si+dz*b.co;lx=Math.max(-b.hw+.6,Math.min(b.hw-.6,lx));lz=Math.max(b.fz+.6,Math.min(b.fz+1.5,lz));place(b,lx,lz)}else{if(!hit(nx,P.z))P.x=inside?Math.max(IX-8.4,Math.min(IX+8.4,nx)):Math.max(-95,Math.min(60,nx));
-  if(!hit(P.x,nz))P.z=inside?Math.max(-5.9,Math.min(Math.abs(P.x-IX)<1.4?6.8:5.7,nz)):Math.max(-72,Math.min(43,nz))}
+  if(fl){const b=BL[bi],dx=nx-b.cx,dz=nz-b.cz;let lx=dx*b.co-dz*b.si,lz=dx*b.si+dz*b.co;lx=Math.max(-b.hw+.6,Math.min(b.hw-.6,lx));lz=Math.max(b.fz+.6,Math.min(b.fz+1.5,lz));place(b,lx,lz)}else{if(!hit(nx,P.z))P.x=inside?Math.max(IX-8.4,Math.min(IX+8.4,nx)):Math.max(-110,Math.min(130,nx));
+if(!hit(P.x,nz))P.z=inside?Math.max(-5.9,Math.min(Math.abs(P.x-IX)<1.4?6.8:5.7,nz)):Math.max(-72,Math.min(60,nz))
   const a=Math.atan2(ix,iz);let d=((a-hero.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI;hero.rotation.y+=d*Math.min(1,dt*12);
   ph+=dt*10*Math.min(1,l);
  }else ph*=.8;
@@ -561,12 +893,14 @@ function leave(){sit=null;const b=BL[ctx.bi];inside=false;fl=ctx.f;bi=ctx.bi;pla
   const dx=P.x-b.cx,dz=P.z-b.cz,lx=dx*b.co-dz*b.si,lz=dx*b.si+dz*b.co;
   if(Math.abs(lx)>b.hw||(!fl&&(lz<b.fz+1.5||lz>b.fz+2.8))||(fl&&lz>b.fz+1.7))continue;
   const k2=b.rms.findIndex(r=>Math.abs(lx-r)<1.2);
-  if(k2>=0){const nm=b.names[fl][k2],lb=b.off?(nm?nm.replace('|',' ').toLowerCase():'phòng làm việc'):'lớp '+nm;o1={t:'Vào '+lb+' (E)',f:()=>enter(i,nm,b.rms[k2])}}
+  if(k2>=0&&!b.off){const nm=b.names[fl][k2];o2={t:'🏫 Nhận phòng '+nm+' (Q)',f:()=>openClassModal(nm)}}
   else if(Math.abs(lx)<2.4){if(fl<b.floors-1)o1={t:'▲ Lên tầng '+(fl+2)+' (E)',f:()=>go(i,fl+1)};if(fl>0)o2={t:'▼ Xuống '+(fl==1?'sân':'tầng '+fl)+' (Q)',f:()=>go(i,fl-1)}}
   break}
  if(!inside&&!climb&&!sit&&!pray&&!fl&&!o1){
   if(Math.hypot(P.x+2,P.z-6)<2.6)o1={t:'📖 Mở Sổ Lưu Bút (E)',f:openGuestbook};
   else if(P.x>-19.2&&P.x<-12.8&&P.z>5.5&&P.z<8.6)o1={t:'Lạy cụ Nguyễn Bỉnh Khiêm (E)',f:startPray};
+   if(Math.hypot(P.x+2,P.z-6)<2.6 || Math.hypot(P.x+11,P.z-13)<3.2)o1={t:'📖 Mở Sổ Lưu Bút (E)',f:openGuestbook};
+else if(Math.hypot(P.x-1.5,P.z+19)<2.6)o1={t:'🥁 Đánh trống trường (E)',f:hitSchoolDrum};
  }
  A1=o1;A2=o2;const key=(o1?o1.t:'')+'|'+(o2?o2.t:'');
  if(key!==lastKey){lastKey=key;ab1.style.display=o1?'block':'none';ab2.style.display=o2?'block':'none';ab1.textContent=o1?o1.t:'';ab2.textContent=o2?o2.t:'';act.style.display=(o1||o2)?'flex':'none'}
@@ -584,7 +918,8 @@ function leave(){sit=null;const b=BL[ctx.bi];inside=false;fl=ctx.f;bi=ctx.bi;pla
   up.rotation.x=bw*1.1;armL.rotation.x=armR.rotation.x=-1.2*hs;armL.rotation.z=.6*hs;armR.rotation.z=-.6*hs;legL.rotation.x=legR.rotation.x=0;
   if(t2>=6){pray=null;subhud.innerHTML=H0}}
 
- P.y=(climb?climb.y:(fl?3.6*fl+.1:0))+py+poseY+Math.abs(Math.sin(ph))*(l>.1?.05:0);if(sit)P.y=sit.h===undefined?-.38:sit.h;
+const bridgeOffset = (!inside && !fl && Math.abs(P.z - 35) < 6) ? getBridgeY(P.x) : 0;
+P.y=(climb?climb.y:(fl?3.6*fl+.1:bridgeOffset))+py+poseY+Math.abs(Math.sin(ph))*(l>.1?.05:0);if(sit)P.y=sit.h===undefined?-.38:sit.h;
  flagP.rotation.y=Math.sin(t*3)*.15;
 
  if(ch&&t-lastSync>.1&&(l>.1||climb||sit||py>0||poseIdx===4)){lastSync=t;syncNow()}
@@ -592,5 +927,38 @@ function leave(){sit=null;const b=BL[ctx.bi];inside=false;fl=ctx.f;bi=ctx.bi;pla
 
  const kf=snap?1:Math.min(1,dt*4);snap=0;cam.position.x+=(P.x-cam.position.x)*kf;cam.position.z+=(P.z+(inside?9:14)-cam.position.z)*kf;cam.position.y=(inside?8:9)+(climb?climb.y:fl?3.6*fl:0);
  cam.lookAt(P.x,P.y+1.5,P.z-1);
- ren.render(scene,cam)})();
+ // Cập nhật xe cộ chạy 2 chiều & tự dừng khi có vật cản phía trước
+VEHICLES.forEach(v => {
+  let blocked = Math.hypot(P.x - (v.x + v.dir * 3), P.z - v.z) < 2.2;
+  VEHICLES.forEach(other => {
+    if (other !== v && other.dir === v.dir && Math.abs(other.z - v.z) < 0.8) {
+      const gap = (other.x - v.x) * v.dir;
+      if (gap > 0 && gap < v.len + 2.5) blocked = true;
+    }
+  });
+  v.spd += ((blocked ? 0 : v.baseSpd) - v.spd) * Math.min(1, dt * 5);
+  v.x += v.dir * v.spd * dt;
+  if (v.x > 150) v.x = -150;
+  if (v.x < -150) v.x = 150;
+  const y1 = getBridgeY(v.x), y2 = getBridgeY(v.x + v.dir * 0.5);
+  v.g.position.set(v.x, y1, v.z);
+  v.g.rotation.y = v.dir > 0 ? 0 : Math.PI;
+  v.g.rotation.z = Math.atan2(y2 - y1, 0.5);
+});
+
+// Cập nhật người đi bộ trên vỉa hè & cầu Lạng Am
+NPCS.forEach(n => {
+  n.x += n.dir * n.spd * dt;
+  if (n.x > 130) n.x = -110;
+  if (n.x < -110) n.x = 130;
+  n.phase += dt * 7;
+  n.l1.rotation.z = Math.sin(n.phase) * 0.45;
+  n.l2.rotation.z = -Math.sin(n.phase) * 0.45;
+  n.g.position.set(n.x, getBridgeY(n.x), n.z);
+  n.g.rotation.y = n.dir > 0 ? 0 : Math.PI;
+});
+
+if (drumShake > 0) { drumShake = Math.max(0, drumShake - dt); cam.position.x += (Math.random() - 0.5) * drumShake; }
+drawMinimap();
+ren.render(scene,cam)})();
 </script></body></html>
