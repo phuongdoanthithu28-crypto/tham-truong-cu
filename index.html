@@ -423,12 +423,16 @@ function appendLog(n,m){const d=document.createElement('div');d.innerHTML=`<b st
    });
   }).on('broadcast',{event:'chat'},({payload})=>{
    if(payload&&payload.id!==myId)appendLog(payload.n||'Học sinh',payload.m||'');
-  }).subscribe((s,err)=>{
+ }).subscribe((s,err)=>{
    if(s==='SUBSCRIBED'){syncNow()}
-   else{el.textContent='🟡 Trạng thái phòng: '+s+(err?' ('+err.message+')':'');if(s==='CHANNEL_ERROR'||s==='TIMED_OUT'||s==='CLOSED')setTimeout(joinRoom,3000)}
+   else if(s==='CLOSED'||s==='CHANNEL_ERROR'||s==='TIMED_OUT'){
+    el.textContent='🟡 Đang kết nối lại...';
+    setTimeout(joinRoom,1500);
+   }
   });
  }
  joinRoom();
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(!ch||ch.state!=='joined'))joinRoom()});
  setInterval(()=>{if(ch&&ch.state==='joined')syncNow()},2000);
 })();
 
