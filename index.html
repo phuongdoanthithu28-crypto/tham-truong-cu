@@ -407,20 +407,29 @@ function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;',
 function appendLog(n,m){const d=document.createElement('div');d.innerHTML=`<b style="color:#1c3f94">${esc(n)}:</b> ${esc(m)}`;chatLog.appendChild(d);chatLog.scrollTop=chatLog.scrollHeight}
 
 (function connectOnline(){
- if(!SUPABASE_URL.startsWith('http')||typeof supabase==='undefined')return;
- sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
- ch=sb.channel('thpt-nbk-room',{config:{presence:{key:myId}}});
- ch.on('presence',{event:'sync'},()=>{
-  const st=ch.presenceState(),ids=Object.keys(st);
-  document.getElementById('online').textContent=`🟢 Đang trong trường: ${ids.length} học sinh`;
-  Object.keys(others).forEach(id=>{if(!st[id]){scene.remove(others[id].m);delete others[id]}});
-  ids.forEach(id=>{if(id===myId)return;const d=st[id][0];
-   if(!others[id]){const p=spawnOther(d.n||'Học sinh');p.m.position.set(d.x,d.y||0,d.z);others[id]=Object.assign(p,{tx:d.x,ty:d.y||0,tz:d.z,tr:d.r||0});applyOtherLook(others[id],d)}
-   else{others[id].tx=d.x;others[id].ty=d.y||0;others[id].tz=d.z;others[id].tr=d.r||0;applyOtherLook(others[id],d)}
+ const el=document.getElementById('online');
+ if(!SUPABASE_URL.startsWith('http')||typeof supabase==='undefined'){el.textContent='🔴 Lỗi tải thư viện kết nối';return}
+ sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{realtime:{params:{eventsPerSecond:10}}});
+ function joinRoom(){
+  if(ch)sb.removeChannel(ch);
+  ch=sb.channel('thpt-nbk-room',{config:{presence:{key:myId}}});
+  ch.on('presence',{event:'sync'},()=>{
+   const st=ch.presenceState(),ids=Object.keys(st);
+   el.textContent=`🟢 Đang trong trường: ${ids.length} học sinh`;
+   Object.keys(others).forEach(id=>{if(!st[id]){scene.remove(others[id].m);delete others[id]}});
+   ids.forEach(id=>{if(id===myId)return;const d=st[id][0];
+    if(!others[id]){const p=spawnOther(d.n||'Học sinh');p.m.position.set(d.x,d.y||0,d.z);others[id]=Object.assign(p,{tx:d.x,ty:d.y||0,tz:d.z,tr:d.r||0});applyOtherLook(others[id],d)}
+    else{others[id].tx=d.x;others[id].ty=d.y||0;others[id].tz=d.z;others[id].tr=d.r||0;applyOtherLook(others[id],d)}
+   });
+  }).on('broadcast',{event:'chat'},({payload})=>{
+   if(payload&&payload.id!==myId)appendLog(payload.n||'Học sinh',payload.m||'');
+  }).subscribe((s,err)=>{
+   if(s==='SUBSCRIBED'){syncNow()}
+   else{el.textContent='🟡 Trạng thái phòng: '+s+(err?' ('+err.message+')':'');if(s==='CHANNEL_ERROR'||s==='TIMED_OUT'||s==='CLOSED')setTimeout(joinRoom,3000)}
   });
- }).on('broadcast',{event:'chat'},({payload})=>{
-  if(payload&&payload.id!==myId)appendLog(payload.n||'Học sinh',payload.m||'');
- }).subscribe(s=>{if(s==='SUBSCRIBED')syncNow()});
+ }
+ joinRoom();
+ setInterval(()=>{if(ch&&ch.state==='joined')syncNow()},2000);
 })();
 
 // Logic Sổ Lưu Bút
